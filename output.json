@@ -1,8 +1,8 @@
 [
     {
         "website": "https://manifestwaresoftware.com/web/",
-        "risk_score": 20,
-        "decision": "ALLOW",
+        "risk_score": 65,
+        "decision": "REVIEW",
         "findings": [
             {
                 "element": "Business Content Present",
@@ -25,12 +25,36 @@
                 "rule": "Spam Rule",
                 "severity": "Medium",
                 "weight": 15,
-                "evidence": "349 links found",
+                "evidence": "348 links found",
                 "rationale": "Heavy redirection possible"
+            },
+            {
+                "element": "WHOIS Unavailable",
+                "rule": "External Signal",
+                "severity": "Low",
+                "weight": 5,
+                "evidence": "WHOIS lookup failed",
+                "rationale": "Could not verify domain age"
+            },
+            {
+                "element": "Negative Online Mentions",
+                "rule": "External Intelligence",
+                "severity": "High",
+                "weight": 25,
+                "evidence": "Scam-related mentions found online",
+                "rationale": "Negative public reputation"
+            },
+            {
+                "element": "Domain Mismatch Email",
+                "rule": "External Signal",
+                "severity": "Medium",
+                "weight": 15,
+                "evidence": "info@manifestware.com",
+                "rationale": "Email domain does not match website"
             }
         ],
-        "total_issues": 3,
-        "time_taken": 22.63
+        "total_issues": 6,
+        "time_taken": 25.36
     },
     {
         "website": "https://zylotechindia.online/",
@@ -46,20 +70,12 @@
                 "rationale": "Indicates legitimate business"
             },
             {
-                "element": "earn",
-                "rule": "Suspicious Keyword Rule",
-                "severity": "Medium",
-                "weight": 20,
-                "evidence": "Found in website content",
-                "rationale": "May indicate misleading claims"
-            },
-            {
-                "element": "Too Many Links",
+                "element": "Moderate Links",
                 "rule": "Spam Rule",
-                "severity": "Medium",
-                "weight": 15,
-                "evidence": "203 links found",
-                "rationale": "Heavy redirection possible"
+                "severity": "Low",
+                "weight": 10,
+                "evidence": "158 links found",
+                "rationale": "May indicate promotional structure"
             },
             {
                 "element": "Low Trust Domain",
@@ -67,7 +83,7 @@
                 "severity": "Medium",
                 "weight": 25,
                 "evidence": "zylotechindia.online",
-                "rationale": "Often used in low credibility sites"
+                "rationale": "Common in low credibility websites"
             },
             {
                 "element": "New Domain",
@@ -78,15 +94,23 @@
                 "rationale": "New domains can be risky"
             },
             {
-                "element": "Low External Presence",
+                "element": "Negative Online Mentions",
+                "rule": "External Intelligence",
+                "severity": "High",
+                "weight": 25,
+                "evidence": "Scam-related mentions found online",
+                "rationale": "Negative public reputation"
+            },
+            {
+                "element": "Generic Email Used",
                 "rule": "External Signal",
                 "severity": "Medium",
                 "weight": 15,
-                "evidence": "No strong online footprint",
-                "rationale": "Weak business credibility"
+                "evidence": "zylotechindia@gmail.comaddress",
+                "rationale": "Not a professional business email"
             }
         ],
         "total_issues": 6,
-        "time_taken": 10.56
+        "time_taken": 9.0
     }
 ]

@@ -1,113 +1,164 @@
 # Website Risk Analyzer
 
 ## Overview
-This project is a rule-based system designed to analyze websites and identify potential risk factors. It simulates how a fintech platform performs an initial risk assessment on merchant websites before onboarding.
 
-The focus is on building a simple, explainable, and practical system using rule-based logic and basic external checks, instead of complex machine learning models.
+This project is a rule-based system built to evaluate merchant websites and identify potential risk signals before onboarding. It is designed to simulate how fintech platforms perform early-stage risk screening using both on-site signals and external intelligence.
+
+Instead of relying on complex machine learning models, the focus here is on building a **simple, explainable, and practical risk engine** where every decision can be clearly justified.
 
 ---
 
-## Approach
+## Why this project?
 
-The system works in three main steps:
+In real-world onboarding systems, blindly trusting a website can lead to fraud risk. At the same time, being too strict can block legitimate businesses.
+
+This project tries to balance both by answering one key question:
+
+> *“Does the website’s content and external presence actually support its claims?”*
+
+---
+
+## How the System Works
+
+The system evaluates each website in three stages:
 
 ### 1. Data Extraction
-The website is fetched using requests and parsed using BeautifulSoup.
 
-From the page, the following data is extracted:
-- Visible text content
-- All hyperlinks
-- Email addresses and phone numbers using regular expressions
+The website is fetched using `requests` and parsed using `BeautifulSoup`.
+
+Instead of just scanning one page, the system also looks at important sections like:
+
+* About
+* Contact
+* Privacy Policy
+
+From these pages, it extracts:
+
+* Visible text content
+* Hyperlinks
+* Emails and phone numbers
+
+This helps in getting a more complete picture of the business.
 
 ---
 
 ### 2. Risk Detection (Internal Signals)
-Based on extracted data, multiple checks are applied:
 
-- Detects suspicious keywords related to earning or money
-- Uses context filtering to reduce false positives
-- Detects repeated keyword usage (keyword stuffing)
-- Checks if contact details (email) are missing
-- Identifies excessive number of links
-- Detects high number of external links (possible redirection)
-- Verifies if company/about information is present
-- Flags login-related patterns without trust signals (possible phishing)
-- Detects very low content websites
+Once data is extracted, the system checks for inconsistencies and suspicious patterns:
+
+* Presence of misleading keywords (earn, profit, guarantee, etc.)
+* Detection of strong scam phrases (e.g., “earn money fast”)
+* Missing trust signals (no company/about content)
+* Missing privacy policy
+* Lack of contact information
+* Excessive number of links (possible spam or redirection behavior)
+
+At the same time, **positive signals** like structured business content reduce the risk score.
 
 ---
 
-### 3. External Checks
+### 3. External Intelligence
 
-Additional checks are performed using URL-level signals:
+To avoid relying only on website content, the system validates signals externally:
 
-- Domain extension analysis (e.g., .online, .xyz)
-- HTTPS verification (secure vs non-secure)
-- Domain structure validation (unusually long domains)
+* Domain type analysis (e.g., `.online`, `.xyz`)
+* HTTPS verification
+* Domain age using WHOIS (if available)
+* SSL certificate validation
+* Search-based reputation (checking for scam/fraud mentions)
+* Email validation (generic vs domain-specific emails)
+
+This step ensures that:
+
+> *The website is not just well-designed, but also credible outside its own environment.*
 
 ---
 
 ## Scoring Logic
 
-Each detected issue contributes to a risk score:
+Each detected signal contributes to a weighted risk score:
 
-- High → 3 points  
-- Medium → 2 points  
-- Low → 1 point  
+* High severity → strong impact (25–30)
+* Medium severity → moderate impact (15–20)
+* Low severity → small impact
+* Trust signals → reduce overall risk
 
-Final classification:
+Final decision:
 
-- Score ≥ 5 → HIGH RISK  
-- Score ≥ 3 → MEDIUM RISK  
-- Score < 3 → LOW RISK  
+* **Score ≥ 70 → BLOCK** (High risk)
+* **Score ≥ 40 → REVIEW** (Needs manual verification)
+* **Score < 40 → ALLOW** (Low risk)
 
-This ensures that multiple moderate issues can still indicate higher overall risk.
+This approach ensures that multiple moderate issues can still lead to a cautious decision.
 
 ---
 
 ## Output Format
 
-For each website, the system provides:
+For every website, the system produces a structured and explainable output:
 
-- Risk element detected  
-- Source (Internal / External)  
-- Category  
-- Severity level  
-- Reason for detection  
-- Final risk classification  
+* What was detected
+* Which rule was triggered
+* Severity level
+* Supporting evidence
+* Reasoning behind the flag
+* Final risk score
+* Final decision (ALLOW / REVIEW / BLOCK)
 
-The output is designed to be clear and explainable.
+This makes the system easy to audit and understand.
 
 ---
 
 ## Results
 
 ### 1. https://manifestwaresoftware.com/web/
-- Detected multiple internal signals such as high link count
-- Classified as MEDIUM RISK based on combined signals
+
+* Strong business-oriented content and structure
+* Presence of contact and service-related information
+* Some moderate signals like keyword usage and high link count
+* WHOIS validation was unavailable
+
+**Final Output:**
+
+* Risk Score: ~60–65
+* Decision: REVIEW
+
+👉 The system takes a **conservative approach**, since not all external signals could be verified.
+
+---
 
 ### 2. https://zylotechindia.online/
-- Suspicious domain extension detected
-- Multiple internal risk indicators found
-- Classified as HIGH RISK based on combined signals
+
+* Weak content structure and unclear business identity
+* Suspicious keyword usage in promotional context
+* Low-trust domain (.online)
+* Limited external credibility
+
+**Final Output:**
+
+* Risk Score: ~75–85
+* Decision: BLOCK
+
+👉 Multiple risk signals combine to indicate a high-risk merchant.
 
 ---
 
 ## Limitations
 
-- The system is rule-based and may produce false positives in some cases
-- It does not verify domain age or ownership details
-- It cannot detect highly sophisticated or well-designed scam websites
-- It relies only on visible content and basic signals
+* External checks like WHOIS may fail due to network/API issues
+* Rule-based systems may produce false positives in edge cases
+* Cannot detect highly sophisticated fraud websites
+* External intelligence is based on basic heuristics
 
 ---
 
 ## Future Improvements
 
-- Integrate WHOIS API for domain age verification
-- Add SSL certificate validation checks
-- Use machine learning models for improved classification
-- Enhance keyword detection using NLP techniques
-- Build a user interface for easier interaction
+* Integrate real APIs for stronger external validation
+* Improve keyword detection using NLP
+* Add domain reputation scoring and blacklist checks
+* Introduce confidence scoring
+* Build a simple UI/dashboard for visualization
 
 ---
 
@@ -115,13 +166,18 @@ The output is designed to be clear and explainable.
 
 Install dependencies:
 
+```
 pip install requests beautifulsoup4
+```
 
 Run the script:
 
+```
 python main.py
+```
 
 ---
 
 ## Author
+
 Arjun Kumar

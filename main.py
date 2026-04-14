@@ -2,9 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin, urlparse
+from datetime import datetime, timezone
 import socket
 import ssl
-import datetime
 import json
 import time
 import logging
@@ -84,12 +84,11 @@ def make_issue(element, rule, severity, weight, evidence, rationale):
 
 
 # -----------------------------
-# Internal Rules (FINAL FIXED)
+# Internal Rules
 # -----------------------------
 def risk_rules(text, links, emails, phones):
     issues = []
 
-    # ✅ TRUST SIGNAL (IMPORTANT)
     if any(word in text for word in ["about", "services", "solutions", "company"]):
         issues.append(make_issue(
             "Business Content Present",
@@ -100,7 +99,6 @@ def risk_rules(text, links, emails, phones):
             "Indicates legitimate business"
         ))
 
-    # Suspicious keywords
     suspicious_keywords = ["earn", "money", "profit", "income", "guarantee"]
     for word in suspicious_keywords:
         if word in text:
@@ -114,7 +112,6 @@ def risk_rules(text, links, emails, phones):
             ))
             break
 
-    # Strong scam phrases
     fraud_words = [
         "earn money fast", "guaranteed returns",
         "no risk income", "double your money"
@@ -131,7 +128,6 @@ def risk_rules(text, links, emails, phones):
                 "Common scam phrase"
             ))
 
-    # Privacy policy
     if "privacy policy" not in text:
         issues.append(make_issue(
             "Privacy Policy Missing",
@@ -142,7 +138,6 @@ def risk_rules(text, links, emails, phones):
             "Legitimate sites usually include this"
         ))
 
-    # Contact check (FIXED)
     if len(emails) == 0 and len(phones) == 0 and "contact" not in text:
         issues.append(make_issue(
             "No Contact Info",
@@ -153,7 +148,6 @@ def risk_rules(text, links, emails, phones):
             "No verifiable contact details"
         ))
 
-    # Link logic (FIXED)
     if len(links) > 200:
         issues.append(make_issue(
             "Too Many Links",
@@ -177,13 +171,12 @@ def risk_rules(text, links, emails, phones):
 
 
 # -----------------------------
-# External Checks (FINAL FIXED)
+# External Checks
 # -----------------------------
-def external_checks(url):
+def external_checks(url, emails):
     issues = []
     domain = urlparse(url).netloc.replace("www.", "")
 
-    # HTTPS
     if not url.startswith("https://"):
         issues.append(make_issue(
             "No HTTPS",
@@ -194,15 +187,14 @@ def external_checks(url):
             "Data not secure"
         ))
 
-    # Domain type
-    if ".online" in domain:
+    if any(x in domain for x in [".online", ".xyz", ".top"]):
         issues.append(make_issue(
             "Low Trust Domain",
             "Domain Rule",
             "Medium",
             25,
             domain,
-            "Often used in low credibility sites"
+            "Common in low credibility websites"
         ))
 
     # WHOIS
@@ -215,9 +207,21 @@ def external_checks(url):
                 creation_date = creation_date[0]
 
             if creation_date:
-                age_days = (datetime.datetime.now(datetime.UTC) - creation_date).days
+                if creation_date.tzinfo is None:
+                    creation_date = creation_date.replace(tzinfo=timezone.utc)
 
-                if age_days < 180:
+                age_days = (datetime.now(timezone.utc) - creation_date).days
+
+                if age_days < 30:
+                    issues.append(make_issue(
+                        "Very New Domain",
+                        "Domain Age Rule",
+                        "High",
+                        30,
+                        f"{age_days} days old",
+                        "Very new domains are high risk"
+                    ))
+                elif age_days < 180:
                     issues.append(make_issue(
                         "New Domain",
                         "Domain Age Rule",
@@ -229,16 +233,26 @@ def external_checks(url):
 
         except Exception as e:
             logging.warning(f"WHOIS failed: {e}")
+            issues.append(make_issue(
+                "WHOIS Unavailable",
+                "External Signal",
+                "Low",
+                5,
+                "WHOIS lookup failed",
+                "Could not verify domain age"
+            ))
 
-    # SSL check (IGNORED IF FAILS)
+    # SSL
     try:
         context = ssl.create_default_context()
         with socket.create_connection((domain, 443), timeout=5) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
-                expiry = datetime.datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
 
-                if expiry < datetime.datetime.now(datetime.UTC):
+                expiry = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z")
+                expiry = expiry.replace(tzinfo=timezone.utc)
+
+                if expiry < datetime.now(timezone.utc):
                     issues.append(make_issue(
                         "Expired SSL",
                         "SSL Rule",
@@ -251,22 +265,56 @@ def external_checks(url):
     except Exception as e:
         logging.warning(f"SSL check skipped: {e}")
 
-    # External fallback
-    if "zylotech" in domain:
-        issues.append(make_issue(
-            "Low External Presence",
-            "External Signal",
-            "Medium",
-            15,
-            "No strong online footprint",
-            "Weak business credibility"
-        ))
+    # Search-based external signal
+    try:
+        query = f"{domain} scam OR fraud OR review"
+        res = requests.get(
+            f"https://www.bing.com/search?q={query}",
+            headers=HEADERS,
+            timeout=5
+        )
+
+        text = res.text.lower()
+
+        if any(word in text for word in ["scam", "fraud", "complaint"]):
+            issues.append(make_issue(
+                "Negative Online Mentions",
+                "External Intelligence",
+                "High",
+                25,
+                "Scam-related mentions found online",
+                "Negative public reputation"
+            ))
+
+    except:
+        pass
+
+    # Email validation
+    for email in emails:
+        if any(x in email for x in ["gmail", "yahoo", "outlook"]):
+            issues.append(make_issue(
+                "Generic Email Used",
+                "External Signal",
+                "Medium",
+                15,
+                email,
+                "Not a professional business email"
+            ))
+        elif domain not in email:
+            issues.append(make_issue(
+                "Domain Mismatch Email",
+                "External Signal",
+                "Medium",
+                15,
+                email,
+                "Email domain does not match website"
+            ))
 
     return issues
 
 
 # -----------------------------
-# Score (BALANCED)
+# Score
 # -----------------------------
 def calculate_score(issues):
     score = 0
@@ -293,11 +341,10 @@ def analyze(url):
     text, links, emails, phones = get_all_pages(url)
 
     internal = risk_rules(text, links, emails, phones)
-    external = external_checks(url)
+    external = external_checks(url, emails)  # ✅ FIXED
 
     all_issues = internal + external
 
-    # Remove duplicates
     unique = {}
     for i in all_issues:
         if i["element"] not in unique:
@@ -307,7 +354,7 @@ def analyze(url):
     score = calculate_score(all_issues)
     decision = get_decision(score)
 
-    result = {
+    return {
         "website": url,
         "risk_score": score,
         "decision": decision,
@@ -315,8 +362,6 @@ def analyze(url):
         "total_issues": len(all_issues),
         "time_taken": round(time.time() - start, 2)
     }
-
-    return result
 
 
 # -----------------------------
