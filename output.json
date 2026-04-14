@@ -1,0 +1,92 @@
+[
+    {
+        "website": "https://manifestwaresoftware.com/web/",
+        "risk_score": 20,
+        "decision": "ALLOW",
+        "findings": [
+            {
+                "element": "Business Content Present",
+                "rule": "Trust Signal",
+                "severity": "Low",
+                "weight": -15,
+                "evidence": "Professional content detected",
+                "rationale": "Indicates legitimate business"
+            },
+            {
+                "element": "earn",
+                "rule": "Suspicious Keyword Rule",
+                "severity": "Medium",
+                "weight": 20,
+                "evidence": "Found in website content",
+                "rationale": "May indicate misleading claims"
+            },
+            {
+                "element": "Too Many Links",
+                "rule": "Spam Rule",
+                "severity": "Medium",
+                "weight": 15,
+                "evidence": "349 links found",
+                "rationale": "Heavy redirection possible"
+            }
+        ],
+        "total_issues": 3,
+        "time_taken": 22.63
+    },
+    {
+        "website": "https://zylotechindia.online/",
+        "risk_score": 80,
+        "decision": "BLOCK",
+        "findings": [
+            {
+                "element": "Business Content Present",
+                "rule": "Trust Signal",
+                "severity": "Low",
+                "weight": -15,
+                "evidence": "Professional content detected",
+                "rationale": "Indicates legitimate business"
+            },
+            {
+                "element": "earn",
+                "rule": "Suspicious Keyword Rule",
+                "severity": "Medium",
+                "weight": 20,
+                "evidence": "Found in website content",
+                "rationale": "May indicate misleading claims"
+            },
+            {
+                "element": "Too Many Links",
+                "rule": "Spam Rule",
+                "severity": "Medium",
+                "weight": 15,
+                "evidence": "203 links found",
+                "rationale": "Heavy redirection possible"
+            },
+            {
+                "element": "Low Trust Domain",
+                "rule": "Domain Rule",
+                "severity": "Medium",
+                "weight": 25,
+                "evidence": "zylotechindia.online",
+                "rationale": "Often used in low credibility sites"
+            },
+            {
+                "element": "New Domain",
+                "rule": "Domain Age Rule",
+                "severity": "Medium",
+                "weight": 20,
+                "evidence": "58 days old",
+                "rationale": "New domains can be risky"
+            },
+            {
+                "element": "Low External Presence",
+                "rule": "External Signal",
+                "severity": "Medium",
+                "weight": 15,
+                "evidence": "No strong online footprint",
+                "rationale": "Weak business credibility"
+            }
+        ],
+        "total_issues": 6,
+        "time_taken": 10.56
+    }
+]
